@@ -16,6 +16,7 @@ from utils import (
     convert_datetime,
     create_kundali_with_transits,
     get_daily_horoscope,
+    get_timezone_offset,
 )
 import json
 from openai import AsyncOpenAI
@@ -24,6 +25,7 @@ import uuid
 from dotenv import load_dotenv
 import os
 from logger import logger
+
 
 load_dotenv()
 
@@ -62,6 +64,7 @@ async def getdata_submit(
     try:
         birth_datetime_str = f"{dob}T{tob}:00"
         uuid4 = uuid.uuid4()
+        time_offset = get_timezone_offset(lat, lon, birth_datetime_str)
         request_id = str(uuid4).replace("-", "")
         logger.info("Received Data:")
         logger.info(
@@ -76,7 +79,7 @@ async def getdata_submit(
             }
         )
 
-        chart = get_birth_chart(birth_datetime_str, lat, lon)
+        chart = get_birth_chart(birth_datetime_str, lat, lon, time_offset)
         logger.info(f"Generated Birth Chart for request ID {request_id}")
         # generate kundali image
         chart_name = f"static/birthcharts/kundali_{request_id}.png"
@@ -91,7 +94,7 @@ async def getdata_submit(
 
         # Get current transit
         transit_data = compare_transits(
-            datetime.now(), lat, lon, obj_chart, tz_offset=5.5
+            datetime.now(), lat, lon, obj_chart, tz_offset=time_offset
         )
         logger.info(f"Generated Transit Data for request ID {request_id}")
         chart_name = create_kundali_with_transits(transit_data, filename=chart_name)

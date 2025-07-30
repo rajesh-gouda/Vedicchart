@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 import json
 from logger import logger
+from timezonefinder import TimezoneFinder
+from pytz import timezone, utc
 
 load_dotenv()
 openai_client = AsyncOpenAI()
@@ -24,6 +26,29 @@ Output must be under 200 words in total and follow this exact format:
 
 Each field should contain a short, insightful sentence (max 2 sentences) summarizing today's fortune based on Vedic astrology. Avoid unnecessary elaboration. Do not add explanations, labels, or headings outside the JSON format.
 """
+
+
+def get_timezone_offset(lat: float, lon: float, birth_datetime_str: str) -> float:
+    """Get the timezone offset in hours for the given latitude and longitude.
+    Uses TimezoneFinder to determine the timezone and pytz to get the offset.
+    """
+    birth_datetime = datetime.fromisoformat(birth_datetime_str)
+    # Get timezone from lat/lon
+    tf = TimezoneFinder()
+    tz_name = tf.timezone_at(lng=lon, lat=lat)
+
+    # Default offset (e.g., for India if tz not found)
+    time_offset = 5.5
+
+    if tz_name:
+        try:
+            tz = timezone(tz_name)
+            localized_dt = tz.localize(birth_datetime)
+            offset_seconds = localized_dt.utcoffset().total_seconds()
+            time_offset = round(offset_seconds / 3600, 2)
+        except Exception as e:
+            logger.warning(f"Could not compute timezone offset for {tz_name}: {e}")
+    return time_offset
 
 
 def convert_datetime(obj):
