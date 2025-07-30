@@ -5,3 +5,4 @@
 *.pyo
 *.pyd
 static/birthcharts/*.png
+logs/*.log

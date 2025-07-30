@@ -5,6 +5,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 import json
+from logger import logger
 
 load_dotenv()
 openai_client = AsyncOpenAI()
@@ -93,7 +94,7 @@ def create_kundali_with_planets(
         image = Image.open(base_image_path)
         size = image.size[0]  # Assuming square image
     except IOError:
-        print(f"Error: Could not load base image '{base_image_path}'")
+        logger.error(f"Error: Could not load base image '{base_image_path}'")
         return None
 
     draw = ImageDraw.Draw(image)
@@ -166,7 +167,7 @@ def create_kundali_with_planets(
 
     # Save the image
     image.save(filename)
-    print(f"✅ Kundali with planets saved as '{filename}'")
+    logger.info(f"Kundali with planets saved as '{filename}'")
     return image
 
 
@@ -185,7 +186,7 @@ def create_kundali_with_transits(
         image = Image.open(base_image_path)
         size = image.size[0]  # Assuming square image
     except IOError:
-        print(f"Error: Could not load base image '{base_image_path}'")
+        logger.error(f"Error: Could not load base image '{base_image_path}'")
         return None
 
     draw = ImageDraw.Draw(image)
@@ -277,7 +278,7 @@ def create_kundali_with_transits(
 
     # Save the image
     image.save(filename)
-    print(f"✅ Kundali with transit planets saved as '{filename}'")
+    logger.info(f"Kundali with transit planets saved as '{filename}'")
     return filename
 
 
@@ -302,5 +303,5 @@ async def get_daily_horoscope(birth_chart: str, transit_data: str) -> str:
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
-        print(f"Error generating horoscope: {e}")
+        logger.error(f"Error generating horoscope: {e}")
         return None

@@ -23,6 +23,7 @@ from typing import Any
 import uuid
 from dotenv import load_dotenv
 import os
+from logger import logger
 
 load_dotenv()
 
@@ -62,8 +63,8 @@ async def getdata_submit(
         birth_datetime_str = f"{dob}T{tob}:00"
         uuid4 = uuid.uuid4()
         request_id = str(uuid4).replace("-", "")
-        print("Received Data:")
-        print(
+        logger.info("Received Data:")
+        logger.info(
             {
                 "name": name,
                 "gender": gender,
@@ -71,11 +72,12 @@ async def getdata_submit(
                 "place": place,
                 "lat": lat,
                 "lon": lon,
+                "request_id": request_id,
             }
         )
 
         chart = get_birth_chart(birth_datetime_str, lat, lon)
-
+        logger.info(f"Generated Birth Chart for request ID {request_id}")
         # generate kundali image
         chart_name = f"static/birthcharts/kundali_{request_id}.png"
         # create_kundali_with_planets(chart, filename=chart_name)
@@ -91,9 +93,12 @@ async def getdata_submit(
         transit_data = compare_transits(
             datetime.now(), lat, lon, obj_chart, tz_offset=5.5
         )
+        logger.info(f"Generated Transit Data for request ID {request_id}")
         chart_name = create_kundali_with_transits(transit_data, filename=chart_name)
         if not chart_name:
             chart_name = "static/ganesha.png"
+
+        logger.info(f"Generated Kundali with transits for request ID {request_id}")
         # Format the transit data for the horoscope generation
         formatted_transit_text = ""
         for planet in transit_data:
@@ -151,7 +156,7 @@ async def getdata_submit(
             },
         )
     except Exception as e:
-        print(f"Error processing data: {e}")
+        logger.error(f"Error processing data: {e}")
         return templates.TemplateResponse(
             "error.html",
             {
