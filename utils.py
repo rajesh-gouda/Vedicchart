@@ -126,11 +126,18 @@ def create_kundali_with_planets(
 
     # Load fonts
     try:
-        planet_font_size = int(size * 0.025)  # Font for planets
-        planet_font = ImageFont.truetype("arial.ttf", planet_font_size)
+        planet_font_size = int(size * 0.032)
+        try:
+            # Try system-specific arial.ttf first
+            planet_font = ImageFont.truetype("arial.ttf", planet_font_size)
+        except IOError:
+            # Fallback to DejaVu
+            planet_font = ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", planet_font_size
+            )
     except IOError:
+        # Fallback to default bitmap font
         planet_font = ImageFont.load_default()
-
     # House positions (shifted right to avoid overlapping with numbers)
     house_positions = {
         1: (315, 155),
@@ -218,7 +225,7 @@ def create_kundali_with_transits(
 
     # Load fonts
     try:
-        planet_font_size = int(size * 0.025)
+        planet_font_size = int(size * 0.032)
         try:
             # Try system-specific arial.ttf first
             planet_font = ImageFont.truetype("arial.ttf", planet_font_size)
