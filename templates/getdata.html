@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Birth Chart & Divination</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-purple-100 to-blue-100 min-h-screen flex items-center justify-center px-4 py-6">
+  <div class="bg-white max-w-md w-full rounded-xl shadow-xl p-6">
+    <div class="w-full flex justify-center mb-4">
+       <img src="{{ chart_image }}" alt="Birth Chart" class="mx-auto mb-4 rounded" />
+       
+    </div>
+    <h2 class="text-center text-lg font-semibold text-gray-700 mb-1">Enter your birth information and</h2>
+    <p class="text-center text-md font-semibold text-gray-700 mb-4">divinate your fortune today!</p>
+    <h3 class="text-center text-sm font-medium text-gray-500 mb-4">Birth Chart Calculator & Astrology Report</h3>
+
+    <form id="birth-form" method="post" action="/getdata">
+    <!-- Name -->
+    <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Name</label>
+        <input type="text" name="name" required placeholder="Enter Your Name" class="w-full border rounded px-3 py-2" />
+    </div>
+
+    <!-- Gender -->
+    <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Gender</label>
+        <div class="flex gap-4 items-center">
+        <label><input type="radio" name="gender" value="male" checked class="mr-2" /> Male</label>
+        <label><input type="radio" name="gender" value="female" class="mr-2" /> Female</label>
+        </div>
+    </div>
+
+    <!-- Birth Date -->
+    <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Date of Birth</label>
+        <input type="date" name="dob" required class="w-full border rounded px-3 py-2" />
+    </div>
+
+    <!-- Birth Time -->
+    <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Time of Birth</label>
+        <input type="time" name="tob" required class="w-full border rounded px-3 py-2" />
+    </div>
+
+    <!-- Place -->
+    <div class="mb-4">
+        <label class="block text-gray-700 font-medium mb-1">Place of Birth</label>
+        <input type="text" id="place-input" name="place" placeholder="City, State, Country" class="w-full border rounded px-3 py-2" autocomplete="off"/>
+        <ul id="suggestions" class="bg-white border rounded mt-1 hidden max-h-40 overflow-y-auto"></ul>
+    </div>
+
+    <!-- Hidden fields for lat/lon -->
+    <input type="hidden" id="lat" name="lat" />
+    <input type="hidden" id="lon" name="lon" />
+
+    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition">Start divination</button>
+    </form>
+  </div>
+
+  <script>
+    const input = document.getElementById("place-input");
+const suggestionBox = document.getElementById("suggestions");
+const latInput = document.getElementById("lat");
+const lonInput = document.getElementById("lon");
+
+let timeout = null;
+input.addEventListener("input", function () {
+  const query = input.value;
+  if (timeout) clearTimeout(timeout);
+  if (!query) {
+    suggestionBox.classList.add("hidden");
+    return;
+  }
+
+  timeout = setTimeout(async () => {
+    const res = await fetch(`https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=5&namePrefix=${query}`, {
+      headers: {
+        "X-RapidAPI-Key": "bd3f02fa66mshba3cc9609aad6c6p11e93ajsn6a17933f899b",
+        "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com"
+      }
+    });
+
+    const data = await res.json();
+    suggestionBox.innerHTML = '';
+    data.data.forEach(city => {
+      const option = document.createElement("li");
+      option.className = "px-3 py-2 cursor-pointer hover:bg-gray-200";
+      option.textContent = `${city.city}, ${city.region}, ${city.country}`;
+      option.addEventListener("click", () => {
+        input.value = option.textContent;
+        suggestionBox.classList.add("hidden");
+        latInput.value = city.latitude;
+        lonInput.value = city.longitude;
+      });
+      suggestionBox.appendChild(option);
+    });
+
+    suggestionBox.classList.remove("hidden");
+  }, 300);
+});
+
+  </script>
+</body>
+</html>

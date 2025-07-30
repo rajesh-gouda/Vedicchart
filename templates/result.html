@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Horoscope</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-purple-100 min-h-screen flex items-center justify-center px-4 py-8">
+  <div class="bg-white max-w-md w-full rounded-xl shadow-xl p-6">
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <h2 class="text-xl font-semibold text-gray-800">Daily Horoscope Analysis</h2>
+      <p class="text-sm font-medium text-gray-600 mt-1">({{ date }}, Moon Sign: {{ moon_sign }})</p>
+    </div>
+
+    <!-- Divider -->
+    <hr class="border-t border-gray-300 my-3" />
+
+    <!-- Kundali Image -->
+    <img src="{{ chart_image }}" alt="Birth Chart" class="w-3/4 mx-auto mb-3 rounded" />
+
+    <!-- Horoscope Sections -->
+    <div class="text-gray-700 text-sm space-y-5 mt-4">
+      <div>
+        <p><span class="text-lg">💼</span> <strong>Career & Studies:</strong></p>
+        <p class="mt-1">{{ horoscope.get('Career_&_Studies') }}</p>
+      </div>
+
+      <div>
+        <p><span class="text-lg">💰</span> <strong>Finances:</strong></p>
+        <p class="mt-1">{{ horoscope.get('Finances') }}</p>
+      </div>
+
+      <div>
+        <p><span class="text-lg">❤️</span> <strong>Love & Family:</strong></p>
+        <p class="mt-1">{{ horoscope.get('Love_&_Family') }}</p>
+      </div>
+
+      <div>
+        <p><span class="text-lg">🧘‍♂️</span> <strong>Health:</strong></p>
+        <p class="mt-1">{{ horoscope.get('Health') }}</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-xs text-gray-400 mt-6">
+      <p>The divination result for today has been generated.<br>Please come again tomorrow.</p>
+    </div>
+  </div>
+</body>
+</html>
