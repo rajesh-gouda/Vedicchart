@@ -1,8 +1,8 @@
-#VedicChart 🔮
-##Overview
+# VedicChart 🔮
+## Overview
 VedicChart bridges the ancient wisdom of Vedic astrology with modern technology. By providing your birth details, you can instantly receive a visual representation of the current planetary transits in relation to your natal chart, along with a personalized daily forecast to help you navigate your day.
 
-##✨ Key Features
+## ✨ Key Features
 1. Personalized Input: Accepts your Name, Gender, Date of Birth (DOB), Time of Birth (TOB), and Place of Birth (City, Country).
 
 2. Transit Chart (Gochar): Generates a clear, North Indian style image of the daily transit chart, mapping the current planetary positions against the houses of your birth chart.
@@ -19,7 +19,7 @@ VedicChart bridges the ancient wisdom of Vedic astrology with modern technology.
 
 
 
-##🚀 Installation
+## 🚀 Installation
 Clone the repository:
 
 Bash
@@ -32,7 +32,7 @@ Bash
 
 `pip install -r requirements.txt`
 
-🛠️ How It Works
+## 🛠️ How It Works
 Natal Chart Calculation: The application first uses your birth details (DOB, TOB, POB) to calculate your natal chart (Lagna chart) based on Vedic principles, determining the ascendant and planetary positions at your time of birth.
 
 Transit Data: It then fetches the current planetary positions for the present day (Gochar).
