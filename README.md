@@ -20,19 +20,30 @@ VedicChart bridges the ancient wisdom of Vedic astrology with modern technology.
 
 
 ## 🚀 Installation
-Clone the repository:
-
-Bash
+### Clone the repository:
 
 `git clone https://github.com/rajesh-gouda/Vedicchart.git`
 `cd Vedicchart`
-Install the required packages:
 
-Bash
+### Create .env file with Openai key in it 
 
-`pip install -r requirements.txt`
+`OPENAI_API_KEY=<YOUR_OPEN_AI_KEY_HERE>`
+
+### Install the required packages:
+
+1. Run with Docker
+    1. docker build -t vedic .                 # Build image
+    2. docker run -p 5010:5010 --name vedic vedic  # Run container
+
+2. Run locally
+    1. pip install -r requirements.txt         # Install deps
+    2. uvicorn main:app --reload               # Start server
+
+
 
 ## 🛠️ How It Works
+
+
 Natal Chart Calculation: The application first uses your birth details (DOB, TOB, POB) to calculate your natal chart (Lagna chart) based on Vedic principles, determining the ascendant and planetary positions at your time of birth.
 
 Transit Data: It then fetches the current planetary positions for the present day (Gochar).
