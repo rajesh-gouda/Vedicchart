@@ -45,7 +45,7 @@ async def getdata(request: Request):
         "getdata.html",
         {
             "request": request,
-            "chart_image": "/static/ganesha.png",
+            "chart_image": "/static/ganesha1.png",
         },
     )
 
@@ -99,7 +99,7 @@ async def getdata_submit(
         logger.info(f"Generated Transit Data for request ID {request_id}")
         chart_name = create_kundali_with_transits(transit_data, filename=chart_name)
         if not chart_name:
-            chart_name = "static/ganesha.png"
+            chart_name = "static/ganesha1.png"
 
         logger.info(f"Generated Kundali with transits for request ID {request_id}")
         # Format the transit data for the horoscope generation
