@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vedic Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="font-sans bg-gradient-to-br from-gray-100 via-white to-gray-100 min-h-screen">
+    <!-- Registration Form -->
+    <div id="registration" class="flex items-center justify-center min-h-screen">
+      <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-200">
+        <h2 class="text-2xl font-bold text-center text-indigo-600 mb-4">
+          Enter Your Birth Details
+        </h2>
+        <form id="register-form">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Name</label>
+            <input name="name" required class="w-full mt-1 p-2 border rounded" type="text" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
+            <input name="dob" required class="w-full mt-1 p-2 border rounded" type="date" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Time of Birth</label>
+            <input name="tob" required class="w-full mt-1 p-2 border rounded" type="time" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Place of Birth</label>
+            <input name="place" id="place" placeholder="City, Country" class="w-full mt-1 p-2 border rounded" type="text" />
+            <ul id="suggestions" class="bg-white border border-gray-300 rounded mt-1 hidden max-h-40 overflow-y-auto shadow-lg"></ul>
+          </div>
+          <input type="hidden" name="lat" id="lat" />
+          <input type="hidden" name="lon" id="lon" />
+          <button class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition duration-200" type="submit">
+            Start Chat
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Chat UI -->
+    <div id="chat-ui" class="hidden flex flex-col h-screen bg-gradient-to-br from-white via-gray-100 to-white">
+      <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-window"></div>
+      <form id="chat-form" class="p-4 bg-white flex gap-2">
+        <input id="chat-input" class="flex-1 border px-4 py-2 rounded" placeholder="Ask your question..." required />
+        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" type="submit">
+          Send
+        </button>
+      </form>
+    </div>
+
+    <script>
+      let currentUser = {};
+      const registerForm = document.getElementById("register-form");
+      const chatUI = document.getElementById("chat-ui");
+      const registration = document.getElementById("registration");
+      const chatForm = document.getElementById("chat-form");
+      const chatWindow = document.getElementById("chat-window");
+
+      registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(registerForm);
+        const body = Object.fromEntries(formData.entries());
+
+        const response = await fetch("/register_user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (response.ok) {
+          currentUser = await response.json();
+          registration.classList.add("hidden");
+          chatUI.classList.remove("hidden");
+        }
+      });
+
+      chatForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const input = document.getElementById("chat-input");
+        const query = input.value.trim();
+        if (!query) return;
+
+        appendMessage("You", query, "right");
+        input.value = "";
+
+        const res = await fetch("/vedicchat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: currentUser.user_id,
+            query,
+          }),
+        });
+
+        const data = await res.json();
+        appendMessage("AI", data.response, "left");
+      });
+
+      function appendMessage(sender, text, side) {
+        const msg = document.createElement("div");
+        msg.className = `flex ${side === "right" ? "justify-end" : "justify-start"}`;
+        msg.innerHTML = `
+          <div class="max-w-sm p-3 rounded-xl shadow ${
+            side === "right" ? "bg-indigo-100 text-indigo-900" : "bg-gray-200 text-gray-800"
+          }">
+            <span class="text-sm">${text}</span>
+          </div>
+        `;
+        chatWindow.appendChild(msg);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      // Place autocomplete logic
+      const input = document.getElementById("place");
+      const suggestionBox = document.getElementById("suggestions");
+      const latInput = document.getElementById("lat");
+      const lonInput = document.getElementById("lon");
+      let timeout = null;
+      input.addEventListener("input", function () {
+        const query = input.value;
+        if (timeout) clearTimeout(timeout);
+        if (!query) {
+          suggestionBox.classList.add("hidden");
+          return;
+        }
+        timeout = setTimeout(async () => {
+          const res = await fetch(`https://wft-geo-db.p.rapidapi.com/v1/geo/cities?limit=5&namePrefix=${query}`, {
+            headers: {
+              "X-RapidAPI-Key": "bd3f02fa66mshba3cc9609aad6c6p11e93ajsn6a17933f899b",
+              "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com"
+            }
+          });
+          const data = await res.json();
+          suggestionBox.innerHTML = '';
+          data.data.forEach(city => {
+            const option = document.createElement("li");
+            option.className = "px-3 py-2 cursor-pointer hover:bg-indigo-100 hover:text-indigo-800";
+            option.textContent = `${city.city}, ${city.region}, ${city.country}`;
+            option.addEventListener("click", () => {
+              input.value = option.textContent;
+              suggestionBox.classList.add("hidden");
+              latInput.value = city.latitude;
+              lonInput.value = city.longitude;
+            });
+            suggestionBox.appendChild(option);
+          });
+          suggestionBox.classList.remove("hidden");
+        }, 300);
+      });
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  </body>
+</html>

@@ -25,11 +25,12 @@ import uuid
 from dotenv import load_dotenv
 import os
 from logger import logger
-
+from chat import router
 
 load_dotenv()
 
 app = FastAPI()
+app.include_router(router)
 templates = Jinja2Templates(directory="templates")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
