@@ -2,13 +2,8 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from datetime import datetime
-from core_astrology_engine import get_birth_chart, get_current_dasha
-from core_astrology_engine.utils.degree_utils import get_nakshatra_info
-from core_astrology_engine.services.transit_service import compare_transits
-from core_astrology_engine.services.panchanga_service import get_panchanga_data
 from fastapi.staticfiles import StaticFiles
 from datetime import datetime
-from core_astrology_engine.models.chart import Chart, House, Planet
 from utils import (
     detect_yogas,
     create_kundali_with_planets,
@@ -17,6 +12,14 @@ from utils import (
     create_kundali_with_transits,
     get_daily_horoscope,
     get_timezone_offset,
+)
+from vedic import (
+    get_birth_chart,
+    compare_transits,
+    get_mahadasha,
+    get_panchanga,
+    get_divisional_chart,
+    get_yogas,
 )
 import json
 from openai import AsyncOpenAI
@@ -63,7 +66,7 @@ async def getdata_submit(
     lon: float = Form(...),
 ):
     try:
-        birth_datetime_str = f"{dob}T{tob}:00"
+        birth_datetime_str = f"{dob} {tob}:00"
         uuid4 = uuid.uuid4()
         time_offset = get_timezone_offset(lat, lon, birth_datetime_str)
         request_id = str(uuid4).replace("-", "")
@@ -84,50 +87,24 @@ async def getdata_submit(
         logger.info(f"Generated Birth Chart for request ID {request_id}")
         # generate kundali image
         chart_name = f"static/birthcharts/kundali_{request_id}.png"
-        # create_kundali_with_planets(chart, filename=chart_name)
-        obj_chart = Chart(
-            ascendant_sign=chart["ascendant_sign"],
-            ascendant_degree=chart["ascendant_degree"],
-            houses=[House(**h) for h in chart["houses"]],
-            planets={k: Planet(**v) for k, v in chart["planets"].items()},
-            chart_type=chart.get("chart_type", "D1"),
-        )
 
         # Get current transit
         transit_data = compare_transits(
-            datetime.now(), lat, lon, obj_chart, tz_offset=time_offset
+            datetime.now(), lat, lon, chart["chart"], tz_offset=time_offset
         )
         logger.info(f"Generated Transit Data for request ID {request_id}")
-        chart_name = create_kundali_with_transits(transit_data, filename=chart_name)
+        chart_name = create_kundali_with_transits(
+            transit_data["transit_data"], filename=chart_name
+        )
         if not chart_name:
             chart_name = "static/ganesha1.png"
 
         logger.info(f"Generated Kundali with transits for request ID {request_id}")
         # Format the transit data for the horoscope generation
-        formatted_transit_text = ""
-        for planet in transit_data:
-            formatted_transit_text += (
-                f"{planet} is in {transit_data[planet]['transit_sign']} in your "
-                f"{transit_data[planet]['transit_house']}th House at "
-                f"{transit_data[planet]['transit_longitude']}°\n"
-            )
+        formatted_transit_text = transit_data["formatted_text"]
 
         # Format the birth chart for the horoscope generation
-        formatted_birth_chart_text = ""
-        ascendant_sign = chart["ascendant_sign"]
-        formatted_birth_chart_text = (
-            f"The Ascendant (Lagna) is in {ascendant_sign} sign."
-        )
-        for house in chart["houses"]:
-            house_number = house["number"]
-            house_sign = house["sign"]
-            planets = house["planets"]
-
-            if planets:
-                for planet in planets:
-
-                    formatted_birth_chart_text += f"{planet} is in your {house_number}th house in {house_sign} sign.\n"
-
+        formatted_birth_chart_text = chart["formatted_text"]
         # Call OpenAI to generate the horoscope
         horoscope = await get_daily_horoscope(
             birth_chart=formatted_birth_chart_text, transit_data=formatted_transit_text
@@ -139,7 +116,7 @@ async def getdata_submit(
                     "request": request,
                     "error": "Failed to generate horoscope. Please try again.",
                     "name": name,
-                    "moon_sign": chart["planets"]["Moon"]["sign"],
+                    "moon_sign": chart["chart"].planets["Moon"].sign,
                     "date": datetime.now().strftime("%B %d, %Y"),
                     "chart_image": chart_name,
                 },
@@ -151,8 +128,8 @@ async def getdata_submit(
                 "name": None if not name else name,
                 "moon_sign": (
                     None
-                    if not chart["planets"].get("Moon")
-                    else chart["planets"]["Moon"]["sign"]
+                    if not chart["chart"].planets.get("Moon")
+                    else chart["chart"].planets["Moon"].sign
                 ),
                 "date": datetime.now().strftime("%B %d, %Y"),
                 "chart_image": chart_name,
@@ -167,7 +144,7 @@ async def getdata_submit(
                 "request": request,
                 "error": "Failed to generate horoscope. Please try again.",
                 "name": name,
-                "moon_sign": chart["planets"]["Moon"]["sign"],
+                "moon_sign": None,
                 "date": datetime.now().strftime("%B %d, %Y"),
                 "chart_image": None if not chart_name else chart_name,
             },

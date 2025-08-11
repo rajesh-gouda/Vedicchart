@@ -1,5 +1,5 @@
-from typing import List
-from core_astrology_engine.models.chart import Chart
+from dataclasses import dataclass, field, asdict
+from typing import Dict, List
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 from dotenv import load_dotenv
@@ -26,6 +26,31 @@ Output must be under 200 words in total and follow this exact format:
 
 Each field should contain a short, insightful sentence (max 2 sentences) summarizing today's fortune based on Vedic astrology. Avoid unnecessary elaboration. Do not add explanations, labels, or headings outside the JSON format.
 """
+
+
+# === Data Classes ===
+@dataclass
+class Planet:
+    name: str
+    longitude: float
+    sign: str
+    retrograde: bool
+
+
+@dataclass
+class House:
+    number: int
+    sign: str
+    planets: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Chart:
+    ascendant_sign: str
+    ascendant_degree: float
+    houses: List[House]
+    planets: Dict[str, Planet]
+    chart_type: str = "D1"
 
 
 def get_timezone_offset(lat: float, lon: float, birth_datetime_str: str) -> float:
@@ -331,6 +356,7 @@ async def get_daily_horoscope(birth_chart: str, transit_data: str) -> str:
         Transit Data:
         {transit_data}
         """
+        print(f"User Prompt: {user_prompt}")
         response = await openai_client.chat.completions.create(
             model="gpt-4o",
             messages=[
