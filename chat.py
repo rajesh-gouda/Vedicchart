@@ -59,8 +59,16 @@ async def register_user(request: Request):
     dob = data["dob"]
     tob = data["tob"]
     place = data["place"]
-    lat = float(data["lat"])
-    lon = float(data["lon"])
+    try:
+
+        lat = float(data["lat"])
+        lon = float(data["lon"])
+    except Exception as e:
+
+        print(f"Error parsing lat/lon: {e}")
+        # use dummy lat lon of india
+        lat = 20.5937
+        lon = 78.9629
 
     birth_str = f"{dob} {tob}:00"
     user_id = str(uuid4())
@@ -106,18 +114,17 @@ def divisional_chart_tool(chart_type: str = "D9") -> str:
     return result.get("formatted_text", "No chart found.")
 
 
-PROMPT = """You are a traditional Vedic astrologer with expertise in interpreting divisional charts. Always use the available tools — especially the `divisional_chart_tool` — to answer astrology-related questions. 
+PROMPT = """You are a traditional Vedic astrologer with expertise in interpreting divisional charts. Always use the available tools — especially the `divisional_chart_tool` — to answer astrology-related questions.
 
 - For marriage-related queries, reference the D9 chart.
 - For career, use the D10 chart.
 - For children, consult the D7 chart. and so on for other charts.
 
 When answering, always:
-1. Reference the relevant planet(s) and house(s) in the chart.
+1. Reference the relevant planet(s) and house(s) in the chart but do not mentioned them.
 2. Describe the expected outcome based on the chart.
 3. Suggest a simple mantra or remedy when applicable.
 
-If the question is not related to astrology, politely respond that you can only assist with astrology-related topics.
 
 Use prior chat history to maintain continuity and coherence. Keep responses concise (under 100 words), respectful, and focused."""
 
